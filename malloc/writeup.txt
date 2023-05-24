@@ -1,0 +1,40 @@
+COMP 321 Project 5: Malloc
+Tyra Cole (tjc6)
+
+---(Do not write lines of text that exceed the width of this line.)------------
+
+DESIGN DESCRIPTION
+
+For my memory allocator, I use a explicit free list that keeps track of free 
+blocks. Additionally, I used find_fit to search for free blocks, and then 
+coalesced adjoining free blocks. This turns out to be faster than the 
+implicit list method because we do not have to traverse already allocated
+blocks and only look at free memory blocks.
+
+I created a linked list called "freeBlockListPtr" that points to the start of 
+the linked list of all free blocks. When a block is allocated, it is deleted
+from the linked list using the function "remove_block()", and when a block is
+freed, I subsequentially insert it into the linked list with function
+"insert_block()". I used 4 bytes each to store the addresses of the previous 
+and next free block in the payload area of the free block. These pointers make
+sure we only traverse the free blocks and not the allocated blocks. The
+efficiency of this search. This helps increase the efficiency of this program,
+as the efficiency increases as the number of free blocks decreases. This also 
+increases the throughput. If no fit is found, my implementation simply extends 
+the heap size.
+
+TESTING STRATEGY
+
+To test my code, I ran mdriver with verbose output within gdb. With the output,
+I was able to see both my utilization and throughput scores. Once my 
+throughput score reached a consistent number, and I was no longer able to 
+determine where in the program I should make changes to increase it, I ran
+mdriver on each trace file individually to determine which ones were 
+contributing to a lower throughput score. I found that I had particular trouble
+with trace files 7 and 8.
+
+I also used function checkheap to test my program. I had to alter the function
+to work with my explicit free list, and in this function I check if all the 
+blocks in my free list are actually free, and that they have the appropriate 
+prologue and epilogue headers. I used this function to make sure that I was
+not accidentally keeping any allocated blocks in my free list. 

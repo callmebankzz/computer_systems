@@ -1,0 +1,121 @@
+COMP 321 Project 2: Word Count
+Tyra Cole (tjc6)
+2 slip days were used for this assignment. 
+
+---(Do not write lines of text that exceed the width of this line.)------------
+
+DESIGN DESCRIPTION
+
+For this assignment, I created four helper functions:
+
+1. insertFirst(char *name, int num_chars, int num_lines, int num_words) : 
+Helper function to "do_count" that takes the name of a file, and its character, 
+word, and line counts and creates a node struct that has a pointer, next, that 
+points to the current head of the linked list and then assign this 
+newly-inserted node as the new head of the linked list.
+
+2. sort() : A helper function to "do_count" that sorts the nodes of the linked 
+list created by "insertFirst" in ASCIIbetical order by the file_name value of
+the node struct.
+
+3. length() : A helper function to "sort" that calculates and returns the length
+of the linked list.
+
+4. printLinkedList(const bool char_flag, const bool word_flag, 
+                   const bool line_flag) : 
+Helper function to "do_count" that that creates a pointer to a count struct 
+and a pointer to a string to pass into the "print_counts" function for each
+node in the linked list.
+
+
+
+In order to print the counts of all the files processed in this assignment in 
+ASCIIbetical order, I created a linked tree, where each node is a node struct
+with values for the character count, word count, line count, file name, and 
+a pointer to the memory location of the next node in the linked list.
+
+Prior to doing this however, I had to calculate the counts of each file as
+well as the total count in the function "do_count". 
+
+In "do_count", I initialized an int "c" with value 0 to represent the
+characters I will be getting to count the characters, lines, and words
+of all files. I also created a count struct, "total_count", that keeps
+track of the total number of characters, words, and lines of all the files.
+
+I created a for loop to iterate through all "nfiles" of "input_files". For 
+each iteration, f, I create a count struct for the individual file at 
+input_files[f], "count". I would then try to open that file. An error is printed 
+if I am not able to open the file, and a positive integer is returned.
+
+If I am able to open the file, one character at a time, I will check to see if 
+I have encountered a character, word, or line based on the defintions defined
+in the assignment. I update the count struct, "count", for this individual 
+file, as well as add the values of "count" to "total_count".
+
+Once I have calculated these counts, I call the helper function "insertFirst"
+to create and add a new node struct to the beginning of the linked list.
+
+I then check to see if I have managed to reach the end of the file, if not,
+an error is printed and a positive integer is returned because this means
+that there was an issue with reading the current file.
+
+I then close the current file, call the helper function, and move on to the 
+next file.
+
+Once I have calculated the counts of all of the files, I call the helper function
+"sort" to sort the now-complete linked list in ASCIIbetical order. I then call 
+helper function "printLinkedList" to print the node structs in the sorted linked 
+list, as specified in the assignment. I finally call "print_counts" with the 
+total character, word, and line count values to print out the total count.
+
+
+TESTING STRATEGY
+
+Test Cases:
+
+1. Call the main function without the character flag. Tests that do_count
+does not count the number of characters but still prints out 0 for the
+character count of each file and for the total character count.
+
+2. Call the main function without theh word flag. Tests that do_count
+does not count the number of words but still prints out 0 for the
+word count of each file and for the total word count.
+
+3. Call the main function without the line flag. Tests that do_count
+does not count the number of lines but still prints out 0 for the
+line count of each file and for the total line count.
+
+4. Include a file in "input_files" that cannot be opened. Tests that the 
+appropriate error is printed for a file that cannot be opened, as well
+as test that the function continues on with the next file and returns 1 
+at the end.
+
+5. Include a file in "input_files" that has an error that prevents it from 
+being read. Tests that the appropriate error is printed for a file that 
+cannot be opened, as well as test that the function returns 1 at the end.
+
+
+6. Include files in "input_files" with the same file name. This is done to 
+test if the program correctly sorts two nodes with the same file name, and,
+more importantly, includes both files and their values when printing all of
+the file counts.
+
+7. Include an empty file. This is done to test that the program returns 0s 
+for all counts of this file.
+
+8. Include a file with no space characters. This is to test that the
+program is able to accurately count the number of characters while 
+recognizing there are no words or lines in the file.
+
+9. Include a file that does not contain the character '\n'. This is to test
+that the program follows the defition of what a line is and returns 0 as the
+line count for this particular file.
+
+10. Include a file that only contains the '\n' character. This is to test
+that the program follows the definition of what a line is, even if there
+are no other characters in the file. It tests if it is able to count what 
+appears to be an "invisible" line.
+
+11. Include a file with a very large name. Do this to test that the program 
+is able to dynamically allocate memory for the file name and not impose a 
+limit as to how large a file name could be, outside of INT_MAX.

@@ -1,0 +1,72 @@
+COMP 321 Project 3: Linking
+Tyra Cole (tjc6)
+Slip days: 1
+
+---(Do not write lines of text that exceed the width of this line.)------------
+
+PROBLEM 7.6
+
+Symbol | swap.o .symtab entry? | Symbol type | Module where defined | Section
+-------|-----------------------|-------------|----------------------|--------
+buf    | yes                   | global      | m.o                  | .data
+bufp0  | yes                   | global      | swap.o               | .data
+bufp1  | yes                   | local       | swap.o               | .bss
+swap   | yes                   | global      | swap.o               | .text
+temp   | no                    | N/A         | N/A                  | N/A
+incr   | yes                   | local       | swap.o               | .text
+count  | yes                   | local       | swap.o               | .bss
+
+PROBLEM 7.9
+
+Despite "p2" never initializing "main", there is a memory address that
+contains backup memory for "main". This memory will contain some random value 
+that printf() is able to read and interpret as an integer without any error. 
+So because, in C, programs automatically print the throwaway values of
+uninitialized variables, "p2" never need to initialize "main" for a value 
+to be returned.
+
+PROBLEM 7.12
+
+A. 0x4004f8
+
+B. 0x400500
+
+READJCF
+
+DESIGN DESCRIPTION
+
+One design decision I made for this project is to create a struct to
+store two u4 variables for doubles and longs. I did this in order to
+read any constants that contain two u4's. 
+
+The rest of my solution involves following the comments left in the 
+initial assignment file.
+
+In print_jcf_constant, I verified the index, verified that the tag is of
+the expected type, and printed the constant by allocating memory to 
+various structs and calling fread() on the appropriate data within the
+struct. 
+
+In process_jcf_header, after verifying that the JCF is valid, I
+called fread() on the magic number, minor version, and major version of
+the header. I then tested to see if the magic number was valid.
+
+For process_jcf_constant_pool, I once again used fread() to read and 
+store the constant pool from the JCF and print the dependencies, if 
+requested. This constant pool was then destroyed by having all its 
+data freed from memory.
+
+The fields, methods, and interfaces were processed if read successfully.
+
+TESTING STRATEGY
+
+A testing strategy for my solution would involve testing the following
+cases:
+1. Test a Java class file with extra bytes.
+2. Test an empty JCF.
+3. Test a Java class file without a header.
+4. Test a Java class file without a body.
+5. Test a JCF with the incorrect magic number.
+6. Test a truncated JCF.
+7. Test a JCF that will fail verification to see if the correct error
+   statement is printed.

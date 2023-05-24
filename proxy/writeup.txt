@@ -1,0 +1,84 @@
+COMP 321 Project 6: Web Proxy
+
+Tyra Cole (tjc6)
+
+---(Do not write lines of text that exceed the width of this line.)------------
+
+DESIGN DESCRIPTION
+
+My solution involved three main changes to the provided code. In addition to
+altering main to listen to requests, establishing proper connection, and 
+completing the execution of GET requests, I added two additional methods:
+gen_thread and handle_http_request. I will explain all my design decisions for
+these three methods below:
+
+main:
+    The main function starts by checking that the valid number of arguments is
+    passed. It then sends out a signal to allow the function to ignore any
+    broken pipe signals. The main function then opens a file that it will be
+    using to log all requests. To handle concurrent requests, a lock is 
+    created. The main function then listens for connection requests and accepts
+    the request once it has been received. It then gets the host and port info
+    and stores it for later usage by a thread. Before putting a request in,
+    this function uses a lock to lock a shared buffer that has new requests 
+    added to it, given the buffer has enough space available. A thread is then
+    created to handle the current request. And finally, once the shared buffer
+    is done being accessed, main unlocks the lock on the buffer and returns on
+    success. 
+
+gen_thread:
+    gen_thread is a function I created that generates a thread and calls 
+    handle_http_request to complete the execution of all required work. Once 
+    all required work has been comlpeted, the function closes the connection
+    descriptor and returns a null pointer.
+
+handle_http_request:
+    This function is in charge of handling HTTP transactions. It starts by 
+    associating a client rio with the connection descriptor. It then reads the
+    first request header and returns a client error if the request is not 
+    understood by the server, using function client_error. It then  fills in 
+    the method, URI, and version info from the first header by scanning the 
+    header. It checks that the request sent is a GET request, and returns 
+    an error if it is not. The function then calls parse_uri to parse the URI.
+    handle_http_request then opens a connection to the server (and returns an 
+    error if the server is not found). It now must associate the server rio
+    with the server descriptor, and sends the request header to the server.
+    Once the request header is sent, the function uses a while loop to read
+    all the header information. This while loop is where the function strips
+    the Connection, Keep-Alive, and Proxy-Connection headers. And once all 
+    information is read from the header, the function exits the while loop.
+    Once the function reads everything from the header, it writes the close-
+    connection header. It now uses a while loop to read the server's response,
+    and once again writes the close-connection header once everything from 
+    the server response is read. A buffer is locked in order to access the 
+    thread's logging info (with concurrency in mind). The function uses the
+    client address stored in the buffer to get the log information, writes the
+    entry into proxy.log, unlocks the buffer, frees the memory used for the
+    entry, and closes the server descriptor.
+
+
+TESTING STRATEGY
+
+To test my proxy, I started by checking to see if my program is able to proxy 
+browser requests from the following Web sites:
+
+- http://neverssl.com
+– http://www.cs.cmu.edu/˜conglonl
+– http://httpforever.com
+– http://csapp.cs.cmu.edu
+– http://www.gnu.org
+– http://www.washington.edu
+
+as well as check that my program correctly logs these requests in the proxy.log
+file. To test the functionallity of my proxy with longer URI's, I defined a 
+constant, MYMAXLINE, and gave it a value of 10. I then tested to see if my
+proxy would still behave appropriately with http://www.cs.cmu.edu/˜conglonl.
+
+ While this strategy worked to test my proxy's basic functionality, I 
+tested whether my proxy could handle concurrent requests by opening a telnet 
+connection and using Microsoft Edge Version 100.0.1185.44 (64-bit) to request
+content from an end server.
+
+I believe this is a sufficient testing strategy because it allows me to test 
+both the basic and concurrent functionality of my proxy and ensures that my 
+proxy fulfills all the requirements for this assignment.

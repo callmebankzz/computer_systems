@@ -1,0 +1,100 @@
+Tyra Cole
+COMP 321 Project 4: Unix Shell
+03/10/2022
+
+---(Do not write lines of text that exceed the width of this line.)------------
+
+DESIGN DESCRIPTION
+
+For this assignment, I implemented the following functions: main, initpath,
+eval. builtin_cmd, do_bgfg, waitfg, sigchld_handler, sigint_handler, and 
+sigstp_handler. To give a brief summary of the design decisions I made, I will
+be going over them by function, as follows. 
+
+main: My main function simply installs the signal handlers, and initializes the
+path of the file and the job list before then executing the read-evaluate 
+execute loop by parsing and interpreting the command line, specifically
+checking for arguments: 'h', 'v', and 'p'.
+
+builtin_cmd: For this function, I used if-else statements to see which built-in
+command the user typed, running the appropriate one. I also have, in the event
+that the user does not type a built-in command, the function return 0 to 
+indicate they typed an unacceptable command.
+
+do_bgfg: After checking that the valid arguments were passed into the function,
+in the event that the first argument reveals that we want to restart the job
+in the foreground, I have the fg <job> command restarts <job> by sending it a 
+SIGCONT signal, then runs it in the foreground. And in the event that the first
+argument reveals that we want to restart the job in the background, the 
+bg <job> command restarts <job> by sending it a SIGCONT signal, then runs it 
+in the background.
+
+
+eval: For the eval function, I had to consider that the parent must use
+sigprocmask to block SIGCHLD signals before it forks the child. Then, it must 
+unblock these signals, again using sigprocmask after it adds the child to the 
+job list by calling addjob. And since children inherit the blocked vectors of 
+their parents, the child must be sure to then unblock SIGCHLD signals before it
+execs the new program. The reason why I have the parent block the SIGCHLD
+signals is to prevent a data race that can happen when a child is reaped by a
+sigchld_handler before the parent calls addjob.
+
+I also discovered that because my shell is running in the foreground group,
+if my shell then creates a child process, that process would also be in the 
+foreground group and typing ctrl+c would send SIGINT to my shell and every 
+process that my shell created. However, this is not the behavior that I wanted,
+so to work around it, after forking the child, but before executing the
+process, I had the child process call setgid(0, 0), so that the child would be 
+put into a new process group. Now, whenever I type ctrl+c, my shell catches 
+SIGINT and forwards it to the process group that contains the foreground job.
+
+initpath: This function involved me simply saving the path string. All other 
+work involving the search path and parsing the command line can be found in 
+eval. This design decision was the result of me working on the eval function
+before working on the initpath function.
+
+waitfg: This simple function involves a while loop that stops the process PID
+until it is no longer running in the foreground. Once this is the case, the 
+function returns.
+
+sigchld_handler: In this function, I used a while loop to reap all the
+available zombie children. I, then, used if else statements to determine the 
+exit status of all the reaped children. If the child is exited due to a SIGINT,
+or SIGSTP, I return a message saying that the child process ended due to the
+appropriate signal (SIGINT/SIGSTP). If the child process ends due to normal
+conditions, in other words, if WIFEXITED(status) is true, then the job is
+deleted and the function returns. Otherwise, if none of the previous cases 
+are why the child process terminated, I return a message that explains that
+the child process end due to an issue that my code has not been made to
+identify.
+
+sigint_handler and sigstp_handler: The structure of these two functions is very
+similar. Both sigint_handler and sigstp_handler first gathers all the 
+processes in the process group and then either sends signal SIGINT or SIGSTP,
+depending on which function we are looking at, to kill all the foreground jobs
+in the same process group.
+
+TESTING STRATEGY
+
+To test my code, I ran the shell driver using trace files 1-12 on both my 
+shell and the reference solution shell provided for this assignment. For 
+each trace file, I would compare the output that my shell produced to the 
+output that the refernece shell produced. In the event that I noticed a
+difference between the outputs, I first checked if it was caused by a
+/bin/ps command. If not, I checked if the source of the variation was the 
+PIDs. In both of these events, I ignored the differences, as this is expected
+behavior for this assignment. However, in the event that the differences were 
+caused by an error on my end, the only notable case being when comparing
+shells on "trace06.txt". My shell outputed "Job 2 (<PID>) stopped by signal 2",
+while the reference solution outputed "Job [2] (<PID>) terminated by signal
+SIGINT". Realizing that my output not being in the correct format was my only
+error, I looked at my eval function and made the appropriate changes, using
+Sio_puts() and Sio_putl() to have my output be equivalent to the output that
+the reference shell presented.
+
+I believe that this testing strategy is sufficient because after comparing my
+shell's output with the output of the reference solution shell using the
+provided trace files as test cases, I was able to confirm, at least within
+the scope of the trace files provided, that my shell emits identical output
+to the reference solution, except for the exceptions mentioned in the homework
+assignment.
